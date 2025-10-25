@@ -1,0 +1,11 @@
+Flask==3.0.0
+Werkzeug==3.0.1
+google-generativeai==0.3.2
+python-whois==0.8.0
+dnspython==2.4.2
+requests==2.31.0
+python-nmap==0.7.1
+shodan==1.31.0
+validators==0.22.0
+python-dotenv==1.0.0
+cachetools==5.3.3

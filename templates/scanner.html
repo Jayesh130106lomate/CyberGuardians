@@ -1,0 +1,542 @@
+{% extends "base.html" %}
+
+{% block title %}Scanner - Advanced Security Scanner Pro with AI{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/scanner.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="tabs-content">
+    <div class="tab-content active" id="scanner">
+        <div class="panel">
+            <div class="panel-header">
+                <h2><i class="fas fa-shield-alt"></i> Advanced Security Scanner</h2>
+                <small>Professional-grade scanning with single tools or automated chains</small>
+            </div>
+            <div class="panel-body">
+                <!-- Scan Mode Selector -->
+                <div class="scan-mode-selector">
+                    <div class="mode-tabs">
+                        <button class="mode-tab active" data-mode="single">
+                            <i class="fas fa-wrench"></i>
+                            <span>Single Tool</span>
+                            <small>Focus on one specific tool</small>
+                        </button>
+                        <button class="mode-tab" data-mode="chain">
+                            <i class="fas fa-link"></i>
+                            <span>Chain Scan</span>
+                            <small>Multiple tools sequentially</small>
+                        </button>
+                    </div>
+                </div>
+
+                <form id="unifiedScanForm">
+                    <!-- Target Input -->
+                    <div class="form-group">
+                        <label for="target">
+                            <i class="fas fa-bullseye"></i> Target URL/IP/Domain
+                        </label>
+                        <input type="text" id="target" name="target" placeholder="e.g., example.com, 192.168.1.1, scanme.nmap.org" required>
+                        <small class="form-hint">Supports domains, IPs, and URLs</small>
+                    </div>
+
+                    <!-- Single Tool Mode -->
+                    <div class="scan-mode-content" id="singleModeContent">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="tool">
+                                    <i class="fas fa-wrench"></i> Security Tool
+                                </label>
+                                <select id="tool" name="tool" required>
+                                    <optgroup label="🔍 Reconnaissance & Information Gathering">
+                                        <option value="whois">WHOIS - Domain Registration Info</option>
+                                        <option value="dnslookup">DNS Lookup - DNS Records & Resolution</option>
+                                        <option value="sslcheck">SSL Check - Certificate Analysis</option>
+                                        <option value="httpheaders">HTTP Headers - Security Headers Audit</option>
+                                    </optgroup>
+                                    <optgroup label="🖥️ Network Scanning & Enumeration">
+                                        <option value="portscan">Port Scan - Quick Port Discovery</option>
+                                        <option value="nmap">Nmap - Advanced Network Scanner</option>
+                                        <option value="masscan">Masscan - Ultra-Fast Port Scanner</option>
+                                    </optgroup>
+                                    <optgroup label="🌐 Web Application Security">
+                                        <option value="whatweb">WhatWeb - Technology Fingerprinting</option>
+                                        <option value="nikto">Nikto - Web Server Vulnerability Scanner</option>
+                                        <option value="wpscan">WPScan - WordPress Security Scanner</option>
+                                    </optgroup>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="intensity">
+                                    <i class="fas fa-tachometer-alt"></i> Scan Intensity
+                                </label>
+                                <select id="intensity" name="intensity" required>
+                                    <option value="low">Low - Quick scan (Fast)</option>
+                                    <option value="medium" selected>Medium - Standard scan (Recommended)</option>
+                                    <option value="deep">Deep - Comprehensive scan (Slow)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Chain Scan Mode -->
+                    <div class="scan-mode-content" id="chainModeContent" style="display: none;">
+                        <div class="chain-config-section">
+                            <!-- Quick Select Section -->
+                            <div class="chain-quick-select">
+                                <div class="form-group">
+                                    <label for="predefinedChain">
+                                        <i class="fas fa-bolt"></i> Quick Select: Predefined Chains
+                                    </label>
+                                    <select id="predefinedChain" name="predefinedChain">
+                                        <option value="">-- Select a predefined chain --</option>
+                                        <option value="quick_recon">🔍 Quick Recon (WHOIS + DNS + SSL) - ~2 min</option>
+                                        <option value="web_audit">🌐 Web Application Audit (5 tools) - ~8 min</option>
+                                        <option value="network_deep">🖥️ Network Deep Dive (4 tools) - ~12 min</option>
+                                        <option value="wordpress_full">📝 WordPress Full Scan (4 tools) - ~15 min</option>
+                                        <option value="complete">🎯 Complete Assessment (8 tools) - ~20 min</option>
+                                    </select>
+                                    <small class="form-hint">Choose from popular scanning combinations</small>
+                                </div>
+                            </div>
+
+                            <!-- Manual Tool Selection -->
+                            <div class="chain-manual-selection">
+                                <div class="selection-header">
+                                    <label>
+                                        <i class="fas fa-check-square"></i> Manual Tool Selection
+                                    </label>
+                                    <div class="selection-controls">
+                                        <span id="selectedCount" class="tool-count">(0 selected)</span>
+                                        <div class="control-buttons">
+                                            <button type="button" class="btn btn-micro" id="selectAllTools">
+                                                <i class="fas fa-check-double"></i> All
+                                            </button>
+                                            <button type="button" class="btn btn-micro" id="clearAllTools">
+                                                <i class="fas fa-times"></i> Clear
+                                            </button>
+                                            <button type="button" class="btn btn-micro" id="invertSelection">
+                                                <i class="fas fa-exchange-alt"></i> Invert
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="tools-selection-grid" id="toolsGridAdvanced">
+                                    <!-- Reconnaissance Tools -->
+                                    <div class="tool-category-card">
+                                        <div class="category-header">
+                                            <i class="fas fa-search"></i>
+                                            <span>Reconnaissance</span>
+                                        </div>
+                                        <div class="category-tools">
+                                            <div class="tool-checkbox-item">
+                                                <input type="checkbox" class="tool-checkbox" value="whois" id="tool_whois">
+                                                <label for="tool_whois">
+                                                    <span class="tool-name">WHOIS Lookup</span>
+                                                    <small>Domain registration info</small>
+                                                </label>
+                                            </div>
+                                            <div class="tool-checkbox-item">
+                                                <input type="checkbox" class="tool-checkbox" value="dnslookup" id="tool_dnslookup">
+                                                <label for="tool_dnslookup">
+                                                    <span class="tool-name">DNS Lookup</span>
+                                                    <small>DNS records & resolution</small>
+                                                </label>
+                                            </div>
+                                            <div class="tool-checkbox-item">
+                                                <input type="checkbox" class="tool-checkbox" value="sslcheck" id="tool_sslcheck">
+                                                <label for="tool_sslcheck">
+                                                    <span class="tool-name">SSL Certificate</span>
+                                                    <small>Certificate analysis</small>
+                                                </label>
+                                            </div>
+                                            <div class="tool-checkbox-item">
+                                                <input type="checkbox" class="tool-checkbox" value="httpheaders" id="tool_httpheaders">
+                                                <label for="tool_httpheaders">
+                                                    <span class="tool-name">HTTP Headers</span>
+                                                    <small>Security headers audit</small>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Network Scanning Tools -->
+                                    <div class="tool-category-card">
+                                        <div class="category-header">
+                                            <i class="fas fa-network-wired"></i>
+                                            <span>Network Scanning</span>
+                                        </div>
+                                        <div class="category-tools">
+                                            <div class="tool-checkbox-item">
+                                                <input type="checkbox" class="tool-checkbox" value="portscan" id="tool_portscan">
+                                                <label for="tool_portscan">
+                                                    <span class="tool-name">Port Scan</span>
+                                                    <small>Quick port discovery</small>
+                                                </label>
+                                            </div>
+                                            <div class="tool-checkbox-item">
+                                                <input type="checkbox" class="tool-checkbox" value="nmap" id="tool_nmap">
+                                                <label for="tool_nmap">
+                                                    <span class="tool-name">Nmap</span>
+                                                    <small>Advanced network scanner</small>
+                                                </label>
+                                            </div>
+                                            <div class="tool-checkbox-item">
+                                                <input type="checkbox" class="tool-checkbox" value="masscan" id="tool_masscan">
+                                                <label for="tool_masscan">
+                                                    <span class="tool-name">Masscan</span>
+                                                    <small>Ultra-fast port scanner</small>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Web Application Tools -->
+                                    <div class="tool-category-card">
+                                        <div class="category-header">
+                                            <i class="fas fa-globe"></i>
+                                            <span>Web Applications</span>
+                                        </div>
+                                        <div class="category-tools">
+                                            <div class="tool-checkbox-item">
+                                                <input type="checkbox" class="tool-checkbox" value="whatweb" id="tool_whatweb">
+                                                <label for="tool_whatweb">
+                                                    <span class="tool-name">WhatWeb</span>
+                                                    <small>Technology fingerprinting</small>
+                                                </label>
+                                            </div>
+                                            <div class="tool-checkbox-item">
+                                                <input type="checkbox" class="tool-checkbox" value="nikto" id="tool_nikto">
+                                                <label for="tool_nikto">
+                                                    <span class="tool-name">Nikto</span>
+                                                    <small>Web server scanner</small>
+                                                </label>
+                                            </div>
+                                            <div class="tool-checkbox-item">
+                                                <input type="checkbox" class="tool-checkbox" value="wpscan" id="tool_wpscan">
+                                                <label for="tool_wpscan">
+                                                    <span class="tool-name">WPScan</span>
+                                                    <small>WordPress security scanner</small>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Chain Configuration -->
+                            <div class="chain-configuration">
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="chainIntensity">
+                                            <i class="fas fa-tachometer-alt"></i> Scan Intensity
+                                        </label>
+                                        <select id="chainIntensity" name="chainIntensity">
+                                            <option value="low">Low - Quick Scan</option>
+                                            <option value="medium" selected>Medium - Standard</option>
+                                            <option value="deep">Deep - Comprehensive</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="executionMode">
+                                            <i class="fas fa-play-circle"></i> Execution Mode
+                                        </label>
+                                        <select id="executionMode" name="executionMode">
+                                            <option value="sequential" selected>Sequential - One after another</option>
+                                            <option value="parallel">Parallel - Run compatible tools together</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Advanced Options -->
+                    <div class="advanced-options-section">
+                        <div class="advanced-toggle">
+                            <button type="button" class="btn btn-link" id="toggleAdvanced">
+                                <i class="fas fa-chevron-down"></i> Advanced Options
+                            </button>
+                        </div>
+
+                        <div class="advanced-options" id="advancedOptions" style="display: none;">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="timeout">
+                                        <i class="fas fa-clock"></i> Timeout (seconds)
+                                    </label>
+                                    <input type="number" id="timeout" name="timeout" value="300" min="30" max="3600">
+                                    <small class="form-hint">Maximum time per tool (30-3600 seconds)</small>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="maxConcurrency">
+                                        <i class="fas fa-layer-group"></i> Max Parallel Tools
+                                    </label>
+                                    <input type="number" id="maxConcurrency" name="maxConcurrency" value="2" min="1" max="5">
+                                    <small class="form-hint">Maximum parallel executions (1-5)</small>
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" id="enableAI" name="enableAI" checked>
+                                        <i class="fas fa-robot"></i> AI Analysis
+                                        <small class="form-hint">Generate intelligent security insights</small>
+                                    </label>
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" id="enableVulnerabilityIntel" name="enableVulnerabilityIntel">
+                                        <i class="fas fa-shield-alt"></i> Vulnerability Intelligence
+                                        <small class="form-hint">Cross-reference with CVE database</small>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="outputFormat">
+                                    <i class="fas fa-file-export"></i> Output Format
+                                </label>
+                                <select id="outputFormat" name="outputFormat">
+                                    <option value="html" selected>HTML Report</option>
+                                    <option value="json">JSON Data</option>
+                                    <option value="xml">XML Report</option>
+                                    <option value="txt">Plain Text</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary" id="startScanBtn">
+                            <i class="fas fa-play"></i> Start Scan
+                        </button>
+                        <button type="button" class="btn btn-secondary" id="stopScanBtn" disabled>
+                            <i class="fas fa-stop"></i> Stop Scan
+                        </button>
+                        <button type="button" class="btn btn-outline" id="scheduleScanBtn">
+                            <i class="fas fa-calendar-alt"></i> Schedule
+                        </button>
+                    </div>
+                </form>
+
+                <!-- Unified Progress Section -->
+                <div class="unified-progress-section" id="unifiedProgressSection" style="display: none;">
+                    <div class="progress-header">
+                        <h3 id="progressTitle"><i class="fas fa-spinner fa-spin"></i> Scan in Progress</h3>
+                        <div class="progress-stats">
+                            <span id="progressText">Initializing...</span>
+                            <span id="progressPercent">0%</span>
+                        </div>
+                    </div>
+
+                    <div class="progress-bar-container">
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="progressFill"></div>
+                        </div>
+                    </div>
+
+                    <!-- Single Tool Progress -->
+                    <div class="single-progress" id="singleProgress" style="display: none;">
+                        <div class="current-tool-info">
+                            <div class="tool-icon-large" id="currentToolIcon">🔧</div>
+                            <div class="tool-details">
+                                <h4 id="currentToolName">Initializing...</h4>
+                                <p id="currentToolDesc">Preparing scan...</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Chain Progress -->
+                    <div class="chain-progress" id="chainProgress" style="display: none;">
+                        <div class="chain-tools-progress" id="chainToolsProgress">
+                            <!-- Tool progress items will be added here dynamically -->
+                        </div>
+                    </div>
+
+                    <div class="progress-actions">
+                        <button class="btn btn-danger" id="stopUnifiedScan" style="display: none;">
+                            <i class="fas fa-stop"></i> Stop Scan
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="tab-content" id="terminal">
+    <div class="panel">
+        <div class="panel-header">
+            <h2><i class="fas fa-terminal"></i> Live Terminal Output</h2>
+            <div class="header-actions">
+                <button class="btn btn-small" id="clearTerminal">
+                    <i class="fas fa-eraser"></i> Clear
+                </button>
+                <button class="btn btn-small" id="scrollTerminal">
+                    <i class="fas fa-arrow-down"></i> Auto-scroll
+                </button>
+            </div>
+        </div>
+        <div class="panel-body no-padding">
+            <div class="terminal-window" id="terminalWindow">
+                <div class="terminal-header">
+                    <span class="terminal-title">root@scanner:~#</span>
+                    <div class="terminal-buttons">
+                        <span class="terminal-btn close"></span>
+                        <span class="terminal-btn minimize"></span>
+                        <span class="terminal-btn maximize"></span>
+                    </div>
+                </div>
+                <div class="terminal-body" id="terminalBody">
+                    <div class="terminal-line">
+                        <span class="terminal-prompt">$</span>
+                        <span class="terminal-text">Welcome to Security Scanner Terminal</span>
+                    </div>
+                    <div class="terminal-line">
+                        <span class="terminal-prompt">$</span>
+                        <span class="terminal-text">Start a scan to see live output...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="tab-content" id="results">
+    <div class="panel">
+        <div class="panel-header">
+            <h2><i class="fas fa-clipboard-list"></i> Scan Results</h2>
+            <div class="header-actions">
+                <button class="btn btn-small" id="exportResults">
+                    <i class="fas fa-download"></i> Export
+                </button>
+                <button class="btn btn-small" id="clearResults">
+                    <i class="fas fa-trash"></i> Clear
+                </button>
+            </div>
+        </div>
+        <div class="panel-body">
+            <div class="results-container" id="resultsContainer">
+                <div class="empty-state">
+                    <i class="fas fa-inbox"></i>
+                    <p>No scan results yet. Start a scan to see results here.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="tab-content" id="ai-report">
+    <div class="panel">
+        <div class="panel-header">
+            <h2><i class="fas fa-robot"></i> AI-Generated Security Report</h2>
+            <div class="header-actions">
+                <button class="btn btn-small" id="generateReportBtn">
+                    <i class="fas fa-magic"></i> Generate Report
+                </button>
+                <button class="btn btn-small btn-primary" id="exportAIReport" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);">
+                    <i class="fas fa-file-pdf"></i> Export Professional Report
+                </button>
+            </div>
+        </div>
+        <div class="panel-body">
+            <div class="ai-report-container" id="aiReportContainer">
+                <div class="empty-state">
+                    <i class="fas fa-robot"></i>
+                    <p>Click "Generate Report" to create an AI-powered security analysis</p>
+                    <small>Requires at least one completed scan</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="tab-content" id="charts">
+    <div class="panel">
+        <div class="panel-header">
+            <h2><i class="fas fa-chart-bar"></i> Security Analytics Dashboard</h2>
+            <button class="btn btn-small" id="refreshAnalytics">
+                <i class="fas fa-sync-alt"></i> Refresh
+            </button>
+        </div>
+        <div class="panel-body">
+            <div class="charts-grid">
+                <div class="chart-card">
+                    <h3><i class="fas fa-chart-pie"></i> Scan Distribution</h3>
+                    <canvas id="scanDistributionChart"></canvas>
+                </div>
+                <div class="chart-card">
+                    <h3><i class="fas fa-chart-line"></i> Scan Timeline</h3>
+                    <canvas id="scanTimelineChart"></canvas>
+                </div>
+                <div class="chart-card">
+                    <h3><i class="fas fa-chart-bar"></i> Tools Usage</h3>
+                    <canvas id="toolsUsageChart"></canvas>
+                </div>
+                <div class="chart-card">
+                    <h3><i class="fas fa-bullseye"></i> Success Rate</h3>
+                    <canvas id="successRateChart"></canvas>
+                </div>
+                <div class="chart-card">
+                    <h3><i class="fas fa-exclamation-triangle"></i> Vulnerabilities Found</h3>
+                    <canvas id="vulnerabilitiesChart"></canvas>
+                </div>
+                <div class="chart-card">
+                    <h3><i class="fas fa-clock"></i> Average Scan Duration</h3>
+                    <canvas id="scanDurationChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="tab-content" id="tools">
+    <div class="panel">
+        <div class="panel-header">
+            <h2><i class="fas fa-toolbox"></i> Installed Tools</h2>
+            <button class="btn btn-small" id="refreshTools">
+                <i class="fas fa-sync-alt"></i> Refresh
+            </button>
+        </div>
+        <div class="panel-body">
+            <div class="tools-grid" id="toolsGrid"></div>
+        </div>
+    </div>
+</div>
+
+<div class="tab-content" id="history">
+    <div class="panel">
+        <div class="panel-header">
+            <h2><i class="fas fa-clock"></i> Scan History</h2>
+            <button class="btn btn-small" id="clearHistory">
+                <i class="fas fa-trash"></i> Clear History
+            </button>
+        </div>
+        <div class="panel-body">
+            <div class="history-container" id="historyContainer">
+                <div class="empty-state">
+                    <i class="fas fa-history"></i>
+                    <p>No scan history available.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/scanner.js') }}"></script>
+<script src="{{ url_for('static', filename='js/terminal.js') }}"></script>
+<script src="{{ url_for('static', filename='js/results.js') }}"></script>
+<script src="{{ url_for('static', filename='js/analytics.js') }}"></script>
+<script src="{{ url_for('static', filename='js/app.js') }}?v=2"></script>
+{% endblock %}
